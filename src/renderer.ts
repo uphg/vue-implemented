@@ -41,3 +41,29 @@ function mountComponent(vnode: VNode, container: HTMLElement) {
   const subtree = (vnode.tag as Component).render()
   renderer(subtree, container)
 }
+
+// --- run
+const app = document.querySelector<HTMLDivElement>('#app')!
+
+// MyComponent 是一个对象
+const MyComponent = {
+  render() {
+    return {
+      tag: 'div',
+      props: {
+        onClick: () => alert('hello')
+      },
+      children: 'click MyComponent'
+    }
+  }
+}
+
+const vnode = {
+  tag: MyComponent,
+  props: {
+    onClick: () => alert('hello')
+  },
+  children: 'click me'
+}
+
+renderer(vnode, app)
