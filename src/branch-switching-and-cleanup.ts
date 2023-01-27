@@ -81,9 +81,18 @@ function cleanup(effectFn: ActiveEffect) {
 const app = document.createElement('div')
 app.id = '#app'
 
+const div1 = document.createElement('div')
+const div2 = document.createElement('div')
+app.appendChild(div1)
+app.appendChild(div2)
+document.body.appendChild(app)
+
 effect(function effectFn() {
-  console.log('effectFn')
-  document.body.innerText = obj.ok ? obj.text : 'not'
+  div1.innerText = obj.ok ? obj.text : 'not'
+})
+
+effect(function effectFn() {
+  div2.innerText = obj.ok ? obj.text : 'not'
 })
 
 obj.ok = false
