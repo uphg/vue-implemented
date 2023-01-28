@@ -1,6 +1,6 @@
-import { ObjectLike, Fn } from "./types"
+// --- 4.2 响应式数据的基本实现
+import { ObjectLike, Fn } from "../types"
 
-// 简单的响应式实现
 const bucket = new Set<Fn>()
 
 const data = { text: 'hello world' }
@@ -22,5 +22,9 @@ function effect() {
 }
 
 effect()
+
+setTimeout(() => {
+  obj.text = 'hello vue3'
+}, 1000)
 
 export {}

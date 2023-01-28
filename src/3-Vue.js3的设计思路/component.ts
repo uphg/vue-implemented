@@ -1,3 +1,4 @@
+// --- 3.3 组件的本质
 type Render = () => VNode
 type Component = { render: Render }
 

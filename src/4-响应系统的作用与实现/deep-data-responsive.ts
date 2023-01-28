@@ -1,6 +1,6 @@
-import { Fn, ObjectLike } from "./types"
+// --- 4.3 设计一个完善的响应系统（响应对应属性值修改）
+import { Fn, ObjectLike } from "../types"
 
-// 深度数据响应式（对应属性值修改响应）
 let activeEffect: Fn | undefined
 
 function effect(fn: Fn) {

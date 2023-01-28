@@ -1,6 +1,5 @@
-// --- 分支的切换和 cleanup
-
-import { Fn, ObjectLike } from "./types"
+// --- 4.6 避免无限递归循环
+import { Fn, ObjectLike } from "../types"
 
 interface ActiveEffect {
   (): void,
@@ -8,10 +7,11 @@ interface ActiveEffect {
 } 
 
 let activeEffect: ActiveEffect | undefined
+const effectStack: ActiveEffect[] = []
 
 const bucket = new WeakMap<ObjectLike, any>()
 
-const data = { ok: true, text: 'hello world' }
+const data = { foo: 1 }
 
 const obj = new Proxy(data, {
   get(target: ObjectLike, key) {
@@ -40,7 +40,7 @@ function track(target: ObjectLike, key: string | symbol) {
   }
   deps.add(activeEffect)
   if (!activeEffect) return
-  activeEffect.deps?.push(deps) // 新增
+  activeEffect.deps?.push(deps)
 }
 
 function trigger(target: ObjectLike, key: string | symbol) {
@@ -48,8 +48,13 @@ function trigger(target: ObjectLike, key: string | symbol) {
   const depsMap = bucket.get(target)
 
   if (!depsMap) return
-  const effects: Fn[] = depsMap.get(key)
-  const effectsToRun = new Set(effects)
+  const effects: Set<ActiveEffect> = depsMap.get(key)
+  const effectsToRun = new Set<ActiveEffect>()
+  effects.forEach(effectFn => {
+    if (effectFn !== activeEffect) {
+      effectsToRun.add(effectFn)
+    }
+  })
 
   effectsToRun.forEach((effectFn) => {
     effectFn()
@@ -60,7 +65,10 @@ function effect(fn: Fn) {
   const effectFn: ActiveEffect = () => {
     cleanup(effectFn)
     activeEffect = effectFn
+    effectStack.push(effectFn)
     fn()
+    effectStack.pop()
+    activeEffect = effectStack[effectStack.length - 1]
   }
   effectFn.deps = []
   effectFn()
@@ -76,16 +84,4 @@ function cleanup(effectFn: ActiveEffect) {
 }
 
 // --- 运行
-const app = document.createElement('div')
-app.id = '#app'
-document.body.appendChild(app)
-
-effect(function effectFn() {
-  console.log('effect 函数更新')
-  app.innerText = obj.ok ? obj.text : 'not'
-})
-
-obj.ok = false
-obj.text = 1
-obj.text = 2
-obj.text = 3
+effect(() => obj.foo++)
