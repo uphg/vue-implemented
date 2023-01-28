@@ -7,7 +7,6 @@ interface ActiveEffect {
   deps?: any[]
 } 
 
-// 深度数据响应式（对应属性值修改响应）
 let activeEffect: ActiveEffect | undefined
 
 const bucket = new WeakMap<ObjectLike, any>()
@@ -29,7 +28,7 @@ const obj = new Proxy(data, {
 })
 
 function track(target: ObjectLike, key: string | symbol) {
-  console.log(`\n获取 --- obj.${key}`)
+  console.log(`\n获取 --- obj.${key as string}`)
   let depsMap = bucket.get(target)
   if (!depsMap) {
     bucket.set(target, (depsMap = new Map()))
@@ -45,14 +44,14 @@ function track(target: ObjectLike, key: string | symbol) {
 }
 
 function trigger(target: ObjectLike, key: string | symbol) {
-  console.log(`\n设置 --- obj.${key}`)
+  console.log(`\n设置 --- obj.${key as string}`)
   const depsMap = bucket.get(target)
 
   if (!depsMap) return
   const effects: Fn[] = depsMap.get(key)
   const effectsToRun = new Set(effects)
+
   effectsToRun.forEach((effectFn) => {
-    console.log(`obj.${key} 的 effectFn 被调用`)
     effectFn()
   })
 }
@@ -67,10 +66,9 @@ function effect(fn: Fn) {
   effectFn()
 }
 
+// 清除之前 track 收集 effect 中的依赖
 function cleanup(effectFn: ActiveEffect) {
   if (!effectFn.deps) return
-  console.log('关联的副作用列表')
-  console.log([new Set(effectFn.deps[0]), new Set(effectFn.deps[1])])
   for (const deps of effectFn.deps) {
     deps.delete(effectFn)
   }
@@ -80,19 +78,11 @@ function cleanup(effectFn: ActiveEffect) {
 // --- 运行
 const app = document.createElement('div')
 app.id = '#app'
-
-const div1 = document.createElement('div')
-const div2 = document.createElement('div')
-app.appendChild(div1)
-app.appendChild(div2)
 document.body.appendChild(app)
 
 effect(function effectFn() {
-  div1.innerText = obj.ok ? obj.text : 'not'
-})
-
-effect(function effectFn() {
-  div2.innerText = obj.ok ? obj.text : 'not'
+  console.log('effect 函数更新')
+  app.innerText = obj.ok ? obj.text : 'not'
 })
 
 obj.ok = false
